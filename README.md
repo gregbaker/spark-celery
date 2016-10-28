@@ -55,4 +55,3 @@ With any luck, you can now submit tasks from anywhere you can connect to your Ce
 >>> res.wait()
 [[u'and', 77130], [u'a', 32121], [u'And', 15925], [u'as', 13177], [u'all', 11706], [u'at', 8532], [u'are', 6385], [u'an', 4684], [u'any', 3247], [u'am', 2571]]
 ```
-

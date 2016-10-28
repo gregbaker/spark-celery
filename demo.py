@@ -1,9 +1,6 @@
-# spark-submit --master=yarn-client demo.py
-# CONSUMER_PRIORITY=5 spark-submit --master=yarn-client demo.py
-
 from spark_celery import SparkCeleryApp, SparkCeleryTask, RDD_builder, main
 
-BROKER_URL = 'amqp://ggbaker:rabbitmqpassword@localhost:5672/ggbakervhost'
+BROKER_URL = 'amqp://myuser:mypassword@localhost:5672/myvhost'
 BACKEND_URL = 'rpc://'
 
 def sparkconfig_builder():
@@ -19,7 +16,9 @@ app = SparkCeleryApp(broker=BROKER_URL, backend=BACKEND_URL, sparkconfig_builder
 
 
 # Setting priority for workers allows primary workers, with spillover if the primaries are busy. Used to minimize the
-# number of Spark contexts (on the cluster, or caching common data). Works only with Celery >= 4.0
+# number of Spark contexts (active on the cluster, or caching common data). Works only with Celery >= 4.0
+# Run a lower-priority consumer like this:
+#   CONSUMER_PRIORITY=5 spark-submit --master=yarn-client demo.py
 import os
 from kombu import Queue
 priority = int(os.environ.get('CONSUMER_PRIORITY', '10'))
@@ -28,7 +27,7 @@ app.conf['CELERY_QUEUES'] = (
 )
 
 
-@app.task(bind=True, base=SparkCeleryTask, name='simple_sum')
+@app.task(bind=True, base=SparkCeleryTask, name='demo.simple_sum')
 def simple_sum(self, n):
     """
     A simple task function that sums numbers 0 to n-1, using Spark.
@@ -42,7 +41,7 @@ class WordCount(SparkCeleryTask):
     """
     Class-based Spark Task example, with a cached RDD shared between calls to the task.
     """
-    name = 'tasks.WordCount'
+    name = 'demo.WordCount'
 
     @RDD_builder
     def get_data(self, inputs):
