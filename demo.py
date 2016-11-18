@@ -64,6 +64,17 @@ class WordCount(SparkCeleryTask):
 
 app.tasks.register(WordCount())
 
+# Scheduling a periodic task can be done in the beat_schedule and will run if you update the call to main to:
+# main(options={'beat': True})
+
+#from celery.schedules import timedelta
+#app.conf.beat_schedule = {
+#    'frequently-count-words': {
+#        'task': 'tasks.WordCount',
+#        'schedule': timedelta(seconds=10),
+#        'args': ('wordcount', 'a',),
+#    },
+#}
 
 if __name__ == '__main__':
     # When called as a worker, run as a worker.
