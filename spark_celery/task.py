@@ -7,4 +7,4 @@ class SparkCeleryTask(Task):
     def __init__(self, *args, **kwargs):
         super(SparkCeleryTask, self).__init__(*args, **kwargs)
         if not self.name:
-            raise ValueError, 'Task name must be set explicitly.'
+            raise(ValueError, 'Task name must be set explicitly.')
