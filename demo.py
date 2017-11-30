@@ -50,7 +50,7 @@ class WordCount(SparkCeleryTask):
         """
         text = app.sc.textFile(inputs)
         words = text.flatMap(lambda line: line.split()).map(lambda w: (w, 1))
-        wordcount = words.reduceByKey(operator.add).sortBy(lambda (w,c): (-c,w)).cache()
+        wordcount = words.reduceByKey(operator.add).sortBy(lambda wc: (-wc[1], wc[0])).cache()
         return wordcount
 
     def run(self, inputs, first_letter):
@@ -59,7 +59,7 @@ class WordCount(SparkCeleryTask):
         """
         wordcount = self.get_data(inputs)
         first_letter = first_letter.lower()
-        with_first = wordcount.filter(lambda (w,c): w[0].lower() == first_letter)
+        with_first = wordcount.filter(lambda wc: wc[0][0].lower() == first_letter)
         return with_first.take(10)
 
 app.tasks.register(WordCount())
