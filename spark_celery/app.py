@@ -34,6 +34,8 @@ class SparkCeleryApp(Celery):
         Initialize Spark config and context now.
         """
         from pyspark import SparkContext
+        from pyspark.sql import SparkSession
         sparkconf_builder = self.sparkconf_builder or _default_sparkconf_builder
         self.spark_conf = sparkconf_builder()
         self.sc = SparkContext(conf=self.spark_conf)
+        self.spark = SparkSession.builder.config(conf=self.spark_conf).getOrCreate()

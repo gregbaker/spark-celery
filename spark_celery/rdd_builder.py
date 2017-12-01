@@ -27,6 +27,7 @@ def RDD_builder(f):
                 return self._cache[key]
             else:
                 from pyspark.rdd import RDD
+                from pyspark.sql import DataFrame
 
                 result = f(self, *args, **kwargs)
                 self._cache[key] = result
@@ -35,8 +36,15 @@ def RDD_builder(f):
                     st = result.getStorageLevel()
                     if not st.useDisk and not st.useMemory and not st.useOffHeap:
                         raise ValueError('An RDD returned by RDD_builder should be persisted with .cache() or .persist().')
+                elif isinstance(result, DataFrame):
+                    st = result.storageLevel
+                    if not st.useDisk and not st.useMemory and not st.useOffHeap:
+                        raise ValueError('A DataFrame returned by RDD_builder should be persisted with .cache() or .persist().')
 
                 return result
 
     return wrapper
 
+
+# just in case you are really DataFrame focussed...
+DataFrame_builder = RDD_builder

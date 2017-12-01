@@ -1,4 +1,4 @@
 # Any (recent) version of Celery and Kombu is okay, but >=4.0 is required
 # for setting consumer priority.
-celery>=4.0.0rc6
-kombu>=4.0.0rc6
+celery>=4.0.0
+kombu>=4.0.0

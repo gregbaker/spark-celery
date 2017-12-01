@@ -64,6 +64,42 @@ class WordCount(SparkCeleryTask):
 
 app.tasks.register(WordCount())
 
+
+import operator
+class DataFrameWordCount(SparkCeleryTask):
+    """
+    Class-based Spark Task example, with a cached DataFrame shared between calls to the task.
+    """
+    name = 'demo.DataFrameWordCount'
+
+    @RDD_builder
+    def get_data(self, inputs):
+        """
+        Build DataFrame of wordcounts from the inputs directory, sorted by decreasing count.
+        """
+        from pyspark.sql import functions
+        text = app.spark.read.text(inputs)
+        words = text.select(
+            functions.explode(
+                functions.split(text['value'], ' ')).alias('word'))
+        words = words.filter(words['word'] != '')
+        wordcount = words.groupby('word').agg(functions.count('word').alias('count'))
+        wordcount = wordcount.orderBy('count', ascending=False)
+        return wordcount.cache()
+
+    def run(self, inputs, first_letter):
+        """
+        Return 10 most common words from the input directory that start with first_letter.
+        """
+        from pyspark.sql import functions
+        wordcount = self.get_data(inputs)
+        first_letter = first_letter.lower()
+        with_first = wordcount.filter(functions.lower(wordcount['word']).startswith(first_letter))
+        return [tuple(r) for r in with_first.take(10)]
+
+app.tasks.register(DataFrameWordCount())
+
+    
 # Scheduling a periodic task can be done in the beat_schedule and will run if you update the call to main to:
 # main(options={'beat': True})
 
