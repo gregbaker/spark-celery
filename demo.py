@@ -1,4 +1,4 @@
-from spark_celery import SparkCeleryApp, SparkCeleryTask, RDD_builder, main
+from spark_celery import SparkCeleryApp, SparkCeleryTask, cache, main
 
 BROKER_URL = 'amqp://myuser:mypassword@localhost:5672/myvhost'
 BACKEND_URL = 'rpc://'
@@ -43,7 +43,7 @@ class WordCount(SparkCeleryTask):
     """
     name = 'demo.WordCount'
 
-    @RDD_builder
+    @cache
     def get_data(self, inputs):
         """
         Build RDD of wordcounts from the inputs directory, sorted by decreasing count.
@@ -72,7 +72,7 @@ class DataFrameWordCount(SparkCeleryTask):
     """
     name = 'demo.DataFrameWordCount'
 
-    @RDD_builder
+    @cache
     def get_data(self, inputs):
         """
         Build DataFrame of wordcounts from the inputs directory, sorted by decreasing count.

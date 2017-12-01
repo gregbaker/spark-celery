@@ -8,9 +8,10 @@ _kwd_mark = object()
 _data_lock = threading.Lock()
 
 
-def RDD_builder(f):
+def cache(f):
     """
-    Decorator that caches the function's return value, so cached RDDs can be shared between subsequent tasks.
+    Decorator that caches the function's return value, so cached RDDs,
+    DataFrames, and other objects can be shared between calls to tasks.
     """
 
     @wraps(f)
@@ -21,7 +22,7 @@ def RDD_builder(f):
             except AttributeError:
                 self._cache = {}
 
-            # function call hash adapted from http://stackoverflow.com/a/10220908/1236542
+            # function call key adapted from http://stackoverflow.com/a/10220908/1236542
             key = (f,) + args + (_kwd_mark,) + tuple(sorted(kwargs.items()))
             if key in self._cache:
                 return self._cache[key]
@@ -35,16 +36,12 @@ def RDD_builder(f):
                 if isinstance(result, RDD):
                     st = result.getStorageLevel()
                     if not st.useDisk and not st.useMemory and not st.useOffHeap:
-                        raise ValueError('An RDD returned by RDD_builder should be persisted with .cache() or .persist().')
+                        raise ValueError('An RDD returned by a @cache function should be persisted with .cache() or .persist().')
                 elif isinstance(result, DataFrame):
                     st = result.storageLevel
                     if not st.useDisk and not st.useMemory and not st.useOffHeap:
-                        raise ValueError('A DataFrame returned by RDD_builder should be persisted with .cache() or .persist().')
+                        raise ValueError('A DataFrame returned by a @cache function should be persisted with .cache() or .persist().')
 
                 return result
 
     return wrapper
-
-
-# just in case you are really DataFrame focussed...
-DataFrame_builder = RDD_builder
