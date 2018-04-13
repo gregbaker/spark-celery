@@ -12,7 +12,7 @@ def sparkconfig_builder():
         .set('spark.dynamicAllocation.executorIdleTimeout', 20) \
         .set('spark.dynamicAllocation.cachedExecutorIdleTimeout', 60)
 
-app = SparkCeleryApp(broker=BROKER_URL, backend=BACKEND_URL, sparkconfig_builder=sparkconfig_builder)
+app = SparkCeleryApp(broker=BROKER_URL, backend=BACKEND_URL, sparkconf_builder=sparkconfig_builder)
 
 
 # Setting priority for workers allows primary workers, with spillover if the primaries are busy. Used to minimize the
