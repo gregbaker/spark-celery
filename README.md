@@ -18,7 +18,10 @@ You will need a [Celery broker](http://docs.celeryproject.org/en/latest/getting-
 and from  where you want to call Celery tasks.
 
 [RabbitMQ](https://www.rabbitmq.com/) is probably the best choice. You need to [install it](http://docs.celeryproject.org/en/latest/getting-started/brokers/rabbitmq.html)
-(which involves installing the ```rabbitmq``` package on most Linux flavours, and running a few ```rabbitmqctl``` commands to set up access).
+(which involves installing the ```rabbitmq``` package on most Linux flavours, and running a few ```rabbitmqctl``` commands to set up access), or in a Docker container like this:
+```bash
+docker run -d -e RABBITMQ_DEFAULT_USER=myuser -e RABBITMQ_DEFAULT_PASS=mypassword -e RABBITMQ_DEFAULT_VHOST=myvhost -p5672:5672 rabbitmq:3
+```
 
 
 ## Spark Celery Worker
@@ -28,7 +31,7 @@ The worker consumes tasks in the job queue and executes them, within the Spark a
 Since the Spark app is already running, you can get computation started quickly and your results back in a fraction of a second
 (plus the time to actually compute the results: we can't avoid that for you).
 
-Assuming a RabbitMQ setup as above, the Celery app can be created like this. There is a ```demo.py``` in this repository that can serve as an example.
+Assuming a RabbitMQ setup as above, the Celery app can be created like this. There is a `demo.py` in this repository that can serve as an example.
 
 ```python
 BROKER_URL = 'amqp://myuser:mypassword@localhost:5672/myvhost'
@@ -42,6 +45,7 @@ spark-submit --master=local[*] demo.py
 spark-submit --master=yarn-client demo.py
 ```
 
+
 ## Calling Tasks
 
 With any luck, you can now submit tasks from anywhere you can connect to your Celery backend. To the caller, they should work like any other Celery task.
@@ -53,5 +57,30 @@ With any luck, you can now submit tasks from anywhere you can connect to your Ce
 4999950000
 >>> res = WordCount().delay('wordcount', 'a')
 >>> res.wait()
-[[u'and', 77130], [u'a', 32121], [u'And', 15925], [u'as', 13177], [u'all', 11706], [u'at', 8532], [u'are', 6385], [u'an', 4684], [u'any', 3247], [u'am', 2571]]
+[['and', 6584], ['a', 4121], ['as', 2180], ['at', 1501], ['all', 1147]]
+>>> res = WordCount().delay('wordcount', 'b')
+>>> res.wait()
+[['be', 2291], ['by', 1183], ['but', 1126], ['been', 945], ['being', 398]]
+>>> res = DataFrameWordCount().delay('wordcount', 'c')
+>>> res.wait()
+[['could', 1036], ['can', 302], ['Captain', 293], ['came', 180], ['Colonel', 162]]
+```
+
+
+## Caching Data
+
+If there are partial results (RDDs or DataFrames) that you need to re-use between tasks, they can be cached (with Spark's `.cache()`) and returned by a function that uses the `@cache` decorator. The pattern will be like this:
+
+```python
+class MyTask(SparkCeleryTask):
+    name = 'MyTask'
+
+    @cache
+    def partial_result(self, x):
+        # ... build the "part" RDD or DataFrame 
+        return part.cache()
+
+    def run(self, x, y):
+        part = self.partial_result(x)
+        # use "part", knowing it will be cached between calls to .run() ...
 ```

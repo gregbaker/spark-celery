@@ -1,7 +1,9 @@
 from celery.app.task import Task
+from celery.utils import abstract
 
+
+@abstract.CallableTask.register
 class SparkCeleryTask(Task):
-    abstract = True
     name = None
 
     def __init__(self, *args, **kwargs):

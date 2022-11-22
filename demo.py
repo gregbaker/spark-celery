@@ -16,13 +16,13 @@ app = SparkCeleryApp(broker=BROKER_URL, backend=BACKEND_URL, sparkconf_builder=s
 
 
 # Setting priority for workers allows primary workers, with spillover if the primaries are busy. Used to minimize the
-# number of Spark contexts (active on the cluster, or caching common data). Works only with Celery >= 4.0
+# number of Spark contexts (active on the cluster, or caching common data).
 # Run a lower-priority consumer like this:
 #   CONSUMER_PRIORITY=5 spark-submit --master=yarn-client demo.py
 import os
 from kombu import Queue
 priority = int(os.environ.get('CONSUMER_PRIORITY', '10'))
-app.conf['CELERY_QUEUES'] = (
+app.conf['task_queues'] = (
     Queue('celery', consumer_arguments={'x-priority': priority}),
 )
 
@@ -55,14 +55,15 @@ class WordCount(SparkCeleryTask):
 
     def run(self, inputs, first_letter):
         """
-        Return 10 most common words from the input directory that start with first_letter.
+        Return 5 most common words from the input directory that start with first_letter.
         """
         wordcount = self.get_data(inputs)
         first_letter = first_letter.lower()
         with_first = wordcount.filter(lambda wc: wc[0][0].lower() == first_letter)
-        return with_first.take(10)
+        return with_first.take(5)
 
-app.tasks.register(WordCount())
+
+app.register_task(WordCount())
 
 
 import operator
@@ -89,15 +90,16 @@ class DataFrameWordCount(SparkCeleryTask):
 
     def run(self, inputs, first_letter):
         """
-        Return 10 most common words from the input directory that start with first_letter.
+        Return 5 most common words from the input directory that start with first_letter.
         """
         from pyspark.sql import functions
         wordcount = self.get_data(inputs)
         first_letter = first_letter.lower()
         with_first = wordcount.filter(functions.lower(wordcount['word']).startswith(first_letter))
-        return [tuple(r) for r in with_first.take(10)]
+        return [tuple(r) for r in with_first.take(5)]
 
-app.tasks.register(DataFrameWordCount())
+
+app.register_task(DataFrameWordCount())
 
     
 # Scheduling a periodic task can be done in the beat_schedule and will run if you update the call to main to:
