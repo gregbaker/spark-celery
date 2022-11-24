@@ -1,2 +1,2 @@
-celery>=5.0.0
-kombu>=5.0.0
+celery>=5.0.0<6
+kombu>=5.0.0<6

@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'spark_celery',
   packages = ['spark_celery'],
-  version = '0.1.1',
+  version = '0.2',
   description = 'A helper to allow Python Celery tasks to do work in a Spark job',
   author = 'Greg Baker',
   author_email = 'ggbaker@sfu.ca',
